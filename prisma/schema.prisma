@@ -16,27 +16,30 @@ datasource db {
 }
 
 // Application data models (not auth-related)
-model Post {
+model Client {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String   // References Better Auth user ID (not a Prisma relation)
-  slug      String   @unique
-  tags      String[]
+  name      String
+  email     String?
+  phone     String?
+  address   String?
+  notes     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  comments  Comment[]
+  doctorId  String   // References Better Auth user ID (doctor)
+  appointments Appointment[]
 }
 
-model Comment {
+model Appointment {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  content   String
-  authorId  String   // References Better Auth user ID
-  postId    String   @db.ObjectId
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  clientId  String   @db.ObjectId
+  doctorId  String   // References Better Auth user ID
+  date      DateTime
+  time      String
+  status    String   @default("Scheduled") // Scheduled, Completed, Cancelled, Pending
+  notes     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
 }
 
 model Category {
