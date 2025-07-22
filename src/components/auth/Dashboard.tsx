@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSession, signOut } from '../../lib/auth-client';
 import { Button } from '../ui/button';
@@ -6,12 +6,28 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
 import { Separator } from '../ui/separator';
-import { LogOut, User, Mail, Calendar, Shield, Home } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
+import { LogOut, User, Mail, Calendar, Shield, Home, Users, Clock, Plus, Edit, Trash } from 'lucide-react';
 import { Container } from '../../lib/dev-container';
 
 export const Dashboard: React.FC = () => {
   const { data: session, isPending } = useSession();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('profile');
+
+  // Mock data for clients and appointments
+  const [clients, setClients] = useState([
+    { id: '1', name: 'John Doe', email: 'john@example.com', phone: '123-456-7890', lastVisit: '2024-01-15' },
+    { id: '2', name: 'Jane Smith', email: 'jane@example.com', phone: '987-654-3210', lastVisit: '2024-02-20' },
+  ]);
+
+  const [appointments, setAppointments] = useState([
+    { id: '1', client: 'John Doe', date: '2024-03-10', time: '10:00 AM', status: 'Scheduled' },
+    { id: '2', client: 'Jane Smith', date: '2024-03-12', time: '2:00 PM', status: 'Pending' },
+  ]);
 
   const handleLogout = async () => {
     try {
@@ -78,7 +94,7 @@ export const Dashboard: React.FC = () => {
               <div className="flex justify-between items-center h-16">
                 <div className="flex items-center">
                   <h1 className="text-xl font-semibold text-gray-900">
-                    Dashboard
+                    Doctor Dashboard
                   </h1>
                 </div>
                 <div className="flex items-center gap-2">
@@ -106,124 +122,215 @@ export const Dashboard: React.FC = () => {
 
         <Container componentId="dashboard-content">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Container componentId="user-profile-card">
-                <Card className="md:col-span-1">
+            <Tabs defaultValue="profile" className="space-y-6">
+              <TabsList>
+                <TabsTrigger value="profile">Profile</TabsTrigger>
+                <TabsTrigger value="clients">Clients</TabsTrigger>
+                <TabsTrigger value="appointments">Appointments</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="profile">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <Container componentId="user-profile-card">
+                    <Card className="md:col-span-1">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <User className="h-5 w-5" />
+                          Profile
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="flex items-center space-x-4">
+                          <Avatar className="h-16 w-16">
+                            <AvatarImage src={user.image || undefined} alt={user.name || 'User'} />
+                            <AvatarFallback className="text-lg">
+                              {getUserInitials(user.name || 'U')}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <h3 className="font-semibold text-lg">{user.name}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              {user.email}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <Separator />
+                        
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Mail className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm">Email</span>
+                            </div>
+                            <Badge variant={user.emailVerified ? "default" : "secondary"}>
+                              {user.emailVerified ? "Verified" : "Unverified"}
+                            </Badge>
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Calendar className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm">Member since</span>
+                            </div>
+                            <span className="text-sm text-muted-foreground">
+                              {new Date(user.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Container>
+
+                  <Container componentId="dashboard-stats">
+                    <div className="md:col-span-2 space-y-6">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Welcome back, {user.name?.split(' ')[0] || 'Doctor'}!</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-muted-foreground mb-4">
+                            Manage your clients and appointments from this dashboard.
+                          </p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <Card>
+                              <CardContent className="pt-6">
+                                <div className="text-center">
+                                  <div className="text-2xl font-bold text-primary">
+                                    {clients.length}
+                                  </div>
+                                  <p className="text-sm text-muted-foreground">Total Clients</p>
+                                </div>
+                              </CardContent>
+                            </Card>
+                            <Card>
+                              <CardContent className="pt-6">
+                                <div className="text-center">
+                                  <div className="text-2xl font-bold text-primary">
+                                    {appointments.length}
+                                  </div>
+                                  <p className="text-sm text-muted-foreground">Upcoming Appointments</p>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </Container>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="clients">
+                <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <User className="h-5 w-5" />
-                      Profile
+                      <Users className="h-5 w-5" />
+                      Client Management
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center space-x-4">
-                      <Avatar className="h-16 w-16">
-                        <AvatarImage src={user.image || undefined} alt={user.name || 'User'} />
-                        <AvatarFallback className="text-lg">
-                          {getUserInitials(user.name || 'U')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h3 className="font-semibold text-lg">{user.name}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {user.email}
-                        </p>
+                  <CardContent>
+                    <div className="space-y-6">
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-semibold">Client List</h3>
+                        <Button variant="outline" size="sm">
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Client
+                        </Button>
                       </div>
-                    </div>
-                    
-                    <Separator />
-                    
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">Email</span>
-                        </div>
-                        <Badge variant={user.emailVerified ? "default" : "secondary"}>
-                          {user.emailVerified ? "Verified" : "Unverified"}
-                        </Badge>
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">Member since</span>
-                        </div>
-                        <span className="text-sm text-muted-foreground">
-                          {new Date(user.createdAt).toLocaleDateString()}
-                        </span>
-                      </div>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Phone</TableHead>
+                            <TableHead>Last Visit</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {clients.map((client) => (
+                            <TableRow key={client.id}>
+                              <TableCell>{client.name}</TableCell>
+                              <TableCell>{client.email}</TableCell>
+                              <TableCell>{client.phone}</TableCell>
+                              <TableCell>{client.lastVisit}</TableCell>
+                              <TableCell>
+                                <div className="flex gap-2">
+                                  <Button variant="ghost" size="sm">
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm">
+                                    <Trash className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
                     </div>
                   </CardContent>
                 </Card>
-              </Container>
+              </TabsContent>
 
-              <Container componentId="dashboard-stats">
-                <div className="md:col-span-2 space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Welcome back, {user.name?.split(' ')[0] || 'User'}!</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-muted-foreground mb-4">
-                        You're successfully logged in to your account. This is your personal dashboard 
-                        where you can manage your profile and account settings.
-                      </p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <Card>
-                          <CardContent className="pt-6">
-                            <div className="text-center">
-                              <div className="text-2xl font-bold text-primary">
-                                {Math.floor((Date.now() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24))}
-                              </div>
-                              <p className="text-sm text-muted-foreground">Days as member</p>
-                            </div>
-                          </CardContent>
-                        </Card>
-                        <Card>
-                          <CardContent className="pt-6">
-                            <div className="text-center">
-                              <div className="text-2xl font-bold text-primary">
-                                Active
-                              </div>
-                              <p className="text-sm text-muted-foreground">Session status</p>
-                            </div>
-                          </CardContent>
-                        </Card>
+              <TabsContent value="appointments">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="h-5 w-5" />
+                      Appointment Management
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-6">
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-semibold">Upcoming Appointments</h3>
+                        <Button variant="outline" size="sm">
+                          <Plus className="h-4 w-4 mr-2" />
+                          Schedule Appointment
+                        </Button>
                       </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Recent Activity</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between py-2">
-                          <div className="flex items-center gap-3">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span className="text-sm">Successfully logged in</span>
-                          </div>
-                          <span className="text-sm text-muted-foreground">
-                            {new Date().toLocaleTimeString()}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between py-2">
-                          <div className="flex items-center gap-3">
-                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                            <span className="text-sm">Profile accessed</span>
-                          </div>
-                          <span className="text-sm text-muted-foreground">
-                            {new Date().toLocaleTimeString()}
-                          </span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </Container>
-            </div>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Client</TableHead>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Time</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {appointments.map((appt) => (
+                            <TableRow key={appt.id}>
+                              <TableCell>{appt.client}</TableCell>
+                              <TableCell>{appt.date}</TableCell>
+                              <TableCell>{appt.time}</TableCell>
+                              <TableCell>
+                                <Badge variant={appt.status === 'Scheduled' ? 'default' : 'secondary'}>
+                                  {appt.status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex gap-2">
+                                  <Button variant="ghost" size="sm">
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm">
+                                    <Trash className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </div>
         </Container>
       </div>
